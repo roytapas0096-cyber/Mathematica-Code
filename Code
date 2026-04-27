@@ -1,0 +1,30 @@
+ClearAll;
+	Clear[Lin, Nonlin, bound1, bound2, order, f, Coef, mhpm]
+	(*Choose the linear operator*)
+	Lin[f_] := D[f, {x, 2}];
+	(*Choose the nonlinear operator*)
+	Nonlin[f_] := 
+	D[f, {x,2}]-(k_1D)^2 (f-fD(1-Exp[x/\[Delta]]));
+	(*Define  inital/boundary*)
+	Print["---------------- Initial and Boundary Conditions-----------"]
+	bound1 = (f[x] /. x -> 0) == a
+	bound2 = (D[f[x], x] /. x -> -1) == 0
+	(*For Initial Guess*)
+	Print["---------------- Initial Guess-----------"]
+	f[0, x_] = 
+	DSolve[{Lin[f[x]] == 0, bound1, bound2}, f[x], x]
+	Print["---------------- Number of Iteration required-----------"]
+	order = 5
+	(*Taylors Series solution*)
+	Taylor[x_] := f[0, x] + Sum[f[k, x]*p^k, {k, 1, order}];
+	ExpandedPolynomial = 
+	Expand[(1 - p) *Lin[Taylor[x]] + p*Nonlin[Taylor[x]]];
+	Coef[k_, x_] := Coefficient[ExpandedPolynomial, p, k];
+	mhpm[k_, x_] := 
+	DSolve[{Coef[k, x] == 0, (f[k, x] /. x -> 0) == 0, 
+		(D[f[k, x], x] /. x -> -1) == 0}, f[k, x], x]
+	Print["---------------- successive HAM approximations-----------"]
+	Do[Print[Subscript["f", k], "(x)", "=", f[k, x] = mhpm[k, x]], {k, 1, 2}]
+	(*Series solution*)
+	Print["---------------- Approximated HAM solution-----------"]
+	sol1 = Sum[f[k, x], {k, 0, 2}]
